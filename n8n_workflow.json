@@ -1,0 +1,250 @@
+{
+  "name": "agentic-loop-research",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "97733c3b-7443-4a46-ab42-dc6ba52aada5",
+              "leftValue": "={{ $json.enough }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cc1976d1-6a9d-44ba-9ace-495226a60565",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        -256
+      ],
+      "id": "be31ff70-df46-4a09-8e4e-7856c1844f6c",
+      "name": "If",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/plan",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"topic\": \"{{ $json.body.topic }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -32,
+        -256
+      ],
+      "id": "f6576f05-f059-418d-8ed2-94474cd15db9",
+      "name": "Plan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keyword\": \"{{ $json.keyword }}\",\n  \"next_keyword\": \"{{ $json.next_keyword }}\",\n  \"previous_results\": {{ JSON.stringify($json.results || []) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        144,
+        -256
+      ],
+      "id": "f4d1c2a1-3e82-4852-b1b2-8d267cfb4715",
+      "name": "Search"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/judge",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"topic\": \"{{ $json.topic }}\",\n  \"results\": {{ JSON.stringify($json.results) }},\n  \"iteration\": {{ $runIndex }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        320,
+        -256
+      ],
+      "id": "b3aa4d74-456c-4ec0-ac23-8e068cc4adde",
+      "name": "Judge"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/summarize",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"topic\": \"{{ $json.topic }}\",\n  \"all_results\": {{ JSON.stringify($json.results) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        656,
+        -272
+      ],
+      "id": "3f18ac71-5509-45db-b3e4-927b34292dfd",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "675a0e10-d2aa-4b9a-b824-88a4e0c0d3ba",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -192,
+        -256
+      ],
+      "id": "ce3fec32-bb32-4c5a-8406-3628bc794b17",
+      "name": "Trigger",
+      "webhookId": "675a0e10-d2aa-4b9a-b824-88a4e0c0d3ba"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "summary",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        -272
+      ],
+      "id": "f3c7512c-d5cf-4bda-a033-3eab7e52131e",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan": {
+      "main": [
+        [
+          {
+            "node": "Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search": {
+      "main": [
+        [
+          {
+            "node": "Judge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Judge": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a555f88e-b3f3-4561-bb5f-a5d64d1f705c",
+  "meta": {
+    "instanceId": "5b6035351801d3642da813f76e56d313a2d9e300b9e05bdafb509aefce6ccbc9"
+  },
+  "nodeGroups": [],
+  "id": "aKFkkB8dDbWlVTKg",
+  "tags": []
+}
