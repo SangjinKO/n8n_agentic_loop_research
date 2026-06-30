@@ -1,4 +1,4 @@
-# agentic-loop-n8n
+# n8n_agentic_loop_research
 
 > ReAct Research Agent with Gemini & Tavily — n8n + Flask
 
