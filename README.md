@@ -132,3 +132,5 @@ n8n Loop Over Items 노드는 입력 아이템을 전부 처리한 후에야 종
 
 **무한루프 방지**
 Judge가 계속 `enough: false` 를 반환할 경우를 대비해, If 노드에 `$runIndex >= 2` 조건을 OR로 추가해 최대 3회 반복 후 강제 종료되도록 했다.
+
+<img width="877" height="195" alt="n8n_agentic-loop-research" src="https://github.com/user-attachments/assets/40a47bf2-7ec7-43b8-89ac-48b9f8004a2c" />
